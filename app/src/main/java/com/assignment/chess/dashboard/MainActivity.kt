@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -13,16 +14,19 @@ import com.assignment.chess.dashboard.viewmodel.ChessboardViewmodel
 import com.assignment.chess.ui.theme.ChessTheme
 
 class MainActivity : ComponentActivity() {
+    private val viewmodel : ChessboardViewmodel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewmodel = ChessboardViewmodel()
         enableEdgeToEdge()
         setContent {
             ChessTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Dashboard(
-                        viewmodel.board,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        chessboard = viewmodel.board,
+                        markSquare = {position->viewmodel.markSquare(position = position)},
+                        startPosition = viewmodel.startPosition,
+                        endPosition = viewmodel.endPosition
                     )
 
 
