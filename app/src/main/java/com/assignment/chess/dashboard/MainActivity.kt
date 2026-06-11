@@ -26,7 +26,9 @@ class MainActivity : ComponentActivity() {
                         chessboard = viewmodel.board,
                         markSquare = {position->viewmodel.markSquare(position = position)},
                         startPosition = viewmodel.startPosition,
-                        endPosition = viewmodel.endPosition
+                        endPosition = viewmodel.endPosition,
+                        paths= viewmodel.paths,
+                        isSearching = viewmodel.isSearching
                     )
 
 

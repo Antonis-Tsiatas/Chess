@@ -8,6 +8,7 @@ object Dfs {
         moves: List<Position>,
         path: MutableList<Position>,
         paths: MutableList<List<Position>>,
+        visited: MutableSet<Position>,
         position: Position,
         target: Position
     ) {
@@ -20,11 +21,13 @@ object Dfs {
         }
         for (move in moves) {
             val newPosition = sum(move, position)
-            if (newPosition.row >= 0 && newPosition.col >= 0 && newPosition.col < 6 && newPosition.row < 6)
-                continue
+            if (newPosition in visited) continue
+            if (!(newPosition.row >= 0 && newPosition.col >= 0 && newPosition.col < 16 && newPosition.row < 16)) continue
             path.add(newPosition)
-            dfs(moves, path, paths, newPosition, target)
+            visited.add(newPosition)
+            dfs(moves, path, paths, visited,newPosition, target,)
             path.removeAt(path.lastIndex)
+            visited.remove(newPosition)
         }
     }
 
