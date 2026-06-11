@@ -6,15 +6,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.assignment.chess.dashboard.model.Chessboard
 import com.assignment.chess.dashboard.model.Position
+import com.assignment.chess.dashboard.model.toSquare
 
 @Composable
 fun Dashboard(
@@ -25,25 +31,56 @@ fun Dashboard(
     endPosition: Position?,
     paths: List<List<Position>>,
     isSearching: Boolean,
+    sizeText: String,
+    onSizeChange: (String) -> Unit,
+    maxMove: String,
+    onMaxMoveChange: (String) -> Unit,
+    reset: () -> Unit,
 ) {
     LazyColumn(
         modifier = modifier
             .padding(top = 16.dp)
+            .imePadding()
     ) {
         item {
-            val size = chessboard.size
+            ButtonAndTitle("board size", sizeText, onSizeChange)
+        }
+        item {
+            ButtonAndTitle("max movements", maxMove, onMaxMoveChange)
+        }
+        item {
+            Button(
+                onClick = reset,
+                modifier = Modifier.padding(16.dp),
+            ) {
+                Text("reset")
+            }
+        }
+        item {
             Board(
-                modifier = modifier.padding(top = 40.dp),
-                size,
+                modifier = modifier.padding(top = 16.dp),
+                chessboard.size,
                 markSquare,
                 startPosition,
                 endPosition,
             )
         }
         item {
-            PathsList(paths, isSearching)
+            PathsList(paths, isSearching, startPosition, endPosition, chessboard.size)
         }
     }
+}
+
+@Composable
+fun ButtonAndTitle(title: String, value: String, onValueChange: (String) -> Unit) {
+    Text(title, modifier = Modifier.padding(start = 16.dp, top = 8.dp))
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
+        modifier = Modifier.padding(horizontal = 16.dp),
+    )
 }
 
 @Composable
@@ -54,33 +91,37 @@ fun Board(
     startPosition: Position?,
     endPosition: Position?,
 ) {
-    for (row in 0 until size) {
-        Row {
-            for (col in 0 until size) {
-                val position = Position(row, col)
-                val color = when {
-                    position == startPosition -> Color.Green
-                    position == endPosition -> Color.Red
-                    (row + col) % 2 == 1 -> Color.Black
-                    else -> Color.White
+    Column(modifier = modifier) {
+        for (row in 0 until size) {
+            Row {
+                for (col in 0 until size) {
+                    val position = Position(row, col)
+                    val color = when {
+                        position == startPosition -> Color.Green
+                        position == endPosition -> Color.Red
+                        (row + col) % 2 == 1 -> Color.Black
+                        else -> Color.White
+                    }
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .weight(1f)
+                            .background(color)
+                            .clickable { markSquare(position) }
+                    )
                 }
-                Box(
-                    modifier = Modifier
-                        .aspectRatio(1f)
-                        .weight(1f)
-                        .background(color)
-                        .clickable { markSquare(position) }
-                )
             }
         }
     }
-
 }
 
 @Composable
 fun PathsList(
     paths: List<List<Position>>,
-    isSearching: Boolean
+    isSearching: Boolean,
+    startPosition: Position?,
+    endPosition: Position?,
+    boardSize: Int,
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
         when {
@@ -88,13 +129,24 @@ fun PathsList(
                 Text("Searching")
             }
 
+            startPosition == null -> {
+                Text("tap start position")
+            }
+
+            endPosition == null -> {
+                Text("tap end position")
+            }
+
             paths.isEmpty() -> Text("no solution", color = Color.Red)
+
             else -> {
                 paths.forEach { path ->
-                    Text(path.toString())
+                    Text(
+                        (listOf(startPosition!!) + path)
+                            .joinToString(" → ") { it.toSquare(boardSize) }
+                    )
                 }
             }
         }
-
     }
 }

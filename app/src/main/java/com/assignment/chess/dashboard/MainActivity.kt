@@ -14,7 +14,7 @@ import com.assignment.chess.dashboard.viewmodel.ChessboardViewmodel
 import com.assignment.chess.ui.theme.ChessTheme
 
 class MainActivity : ComponentActivity() {
-    private val viewmodel : ChessboardViewmodel by viewModels()
+    private val viewmodel: ChessboardViewmodel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -24,17 +24,19 @@ class MainActivity : ComponentActivity() {
                     Dashboard(
                         modifier = Modifier.padding(innerPadding),
                         chessboard = viewmodel.board,
-                        markSquare = {position->viewmodel.markSquare(position = position)},
+                        markSquare = viewmodel::markSquare,
                         startPosition = viewmodel.startPosition,
                         endPosition = viewmodel.endPosition,
-                        paths= viewmodel.paths,
-                        isSearching = viewmodel.isSearching
+                        paths = viewmodel.paths,
+                        isSearching = viewmodel.isSearching,
+                        sizeText = viewmodel.sizeText,
+                        onSizeChange = viewmodel::onSizeChange,
+                        maxMove = viewmodel.maxMove,
+                        onMaxMoveChange = viewmodel::onMaxMovesChange,
+                        reset = viewmodel::reset,
                     )
-
-
                 }
             }
         }
     }
 }
-

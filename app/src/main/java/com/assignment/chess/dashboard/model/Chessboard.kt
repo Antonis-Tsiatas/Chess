@@ -6,12 +6,11 @@ data class Chessboard(
 )
 
 data class Square(
-    val position: Position,
-    val horse: Boolean?=false
+    val position: Position
 )
 
 data class Position(
     val row: Int,
     val col: Int,
 )
-
+fun Position.toSquare(size: Int) = "${'a' + col}${size - row}"

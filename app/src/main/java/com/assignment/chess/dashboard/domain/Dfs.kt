@@ -10,22 +10,24 @@ object Dfs {
         paths: MutableList<List<Position>>,
         visited: MutableSet<Position>,
         position: Position,
-        target: Position
+        target: Position,
+        maxMove: Int,
+        boardSize: Int,
     ) {
         if (position == target) {
             paths.add(path.toList())
             return
         }
-        if (path.size == 3) {
+        if (path.size == maxMove) {
             return
         }
         for (move in moves) {
             val newPosition = sum(move, position)
             if (newPosition in visited) continue
-            if (!(newPosition.row >= 0 && newPosition.col >= 0 && newPosition.col < 16 && newPosition.row < 16)) continue
+            if (newPosition.row !in 0 until boardSize || newPosition.col !in 0 until boardSize) continue
             path.add(newPosition)
             visited.add(newPosition)
-            dfs(moves, path, paths, visited,newPosition, target,)
+            dfs(moves, path, paths, visited, newPosition, target, maxMove, boardSize)
             path.removeAt(path.lastIndex)
             visited.remove(newPosition)
         }
