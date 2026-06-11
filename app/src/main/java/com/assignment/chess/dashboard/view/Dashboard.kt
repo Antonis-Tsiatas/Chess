@@ -33,6 +33,7 @@ fun Dashboard(
     isSearching: Boolean,
     sizeText: String,
     onSizeChange: (String) -> Unit,
+    sizeError: String?,
     maxMove: String,
     onMaxMoveChange: (String) -> Unit,
     reset: () -> Unit,
@@ -43,7 +44,7 @@ fun Dashboard(
             .imePadding()
     ) {
         item {
-            ButtonAndTitle("board size", sizeText, onSizeChange)
+            ButtonAndTitle("board size", sizeText, onSizeChange, sizeError)
         }
         item {
             ButtonAndTitle("max movements", maxMove, onMaxMoveChange)
@@ -72,14 +73,21 @@ fun Dashboard(
 }
 
 @Composable
-fun ButtonAndTitle(title: String, value: String, onValueChange: (String) -> Unit) {
+fun ButtonAndTitle(
+    title: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    error: String? = null,
+) {
     Text(title, modifier = Modifier.padding(start = 16.dp, top = 8.dp))
     TextField(
         value = value,
         onValueChange = onValueChange,
+        isError = error != null,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true,
         modifier = Modifier.padding(horizontal = 16.dp),
+        supportingText = error?.let { { Text(it) } },
     )
 }
 

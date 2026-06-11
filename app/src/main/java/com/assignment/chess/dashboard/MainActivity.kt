@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import com.assignment.chess.dashboard.data.Repository
 import com.assignment.chess.dashboard.view.Dashboard
+import com.assignment.chess.dashboard.viewmodel.ChessViewModelFactory
 import com.assignment.chess.dashboard.viewmodel.ChessboardViewmodel
 import com.assignment.chess.ui.theme.ChessTheme
 
 class MainActivity : ComponentActivity() {
-    private val viewmodel: ChessboardViewmodel by viewModels()
+    private val viewmodel: ChessboardViewmodel by viewModels {
+        ChessViewModelFactory(Repository(applicationContext))
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -31,6 +35,7 @@ class MainActivity : ComponentActivity() {
                         isSearching = viewmodel.isSearching,
                         sizeText = viewmodel.sizeText,
                         onSizeChange = viewmodel::onSizeChange,
+                        sizeError = viewmodel.sizeError,
                         maxMove = viewmodel.maxMove,
                         onMaxMoveChange = viewmodel::onMaxMovesChange,
                         reset = viewmodel::reset,

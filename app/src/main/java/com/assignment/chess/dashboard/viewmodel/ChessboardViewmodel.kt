@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.assignment.chess.dashboard.data.Repository
+import com.assignment.chess.dashboard.data.SavedSolution
 import com.assignment.chess.dashboard.domain.Dfs.dfs
 import com.assignment.chess.dashboard.domain.KnightMoves
 import com.assignment.chess.dashboard.model.Chessboard
@@ -15,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ChessboardViewmodel : ViewModel() {
+class ChessboardViewmodel(private val repository: Repository) : ViewModel() {
 
     var startPosition by mutableStateOf<Position?>(null)
         private set
@@ -41,6 +43,22 @@ class ChessboardViewmodel : ViewModel() {
     var isSearching by mutableStateOf(false)
         private set
 
+    var sizeError by mutableStateOf<String?>(null)
+        private set
+
+    init {
+        viewModelScope.launch {
+            repository.load()?.let { saved ->
+                size = saved.boardSize
+                sizeText = saved.boardSize.toString()
+                board = createBoard(saved.boardSize)
+                maxMove = saved.maxMove
+                startPosition = saved.start
+                endPosition = saved.end
+                paths = saved.paths
+            }
+        }
+    }
     private fun createBoard(size: Int): Chessboard {
         val squares = List(size * size) { index ->
             val row = index / size
@@ -72,6 +90,15 @@ class ChessboardViewmodel : ViewModel() {
                 Log.d("findPath", "done, count=${results.size}")
                 paths = results
                 isSearching = false
+                repository.save(
+                    SavedSolution(
+                        start = start,
+                        end = end,
+                        boardSize = board.size,
+                        maxMove = maxMove,
+                        paths = results,
+                    )
+                )
             }
     }
 
@@ -90,17 +117,36 @@ class ChessboardViewmodel : ViewModel() {
         endPosition = null
         paths = emptyList()
         isSearching = false
+        viewModelScope.launch {
+            repository.clear()
+        }
     }
 
     fun onSizeChange(value: String) {
         val digits = value.filter { it.isDigit() }
-        sizeText = digits
-        if (digits.isEmpty()) return
+        if (digits.isEmpty()) {
+            sizeText = ""
+            sizeError = null
+            return
+        }
         val newSize = digits.toIntOrNull() ?: return
-        if (newSize in 6..16) {
-            size = newSize
-            board = createBoard(newSize)
-            reset()
+
+        when {
+            newSize < 6 -> {
+                sizeText = digits
+                sizeError = "Minimum board size is 6"
+            }
+            newSize > 16 -> {
+                sizeText = digits
+                sizeError = "Maximum board size is 16"
+            }
+            else -> {
+                sizeText = digits
+                sizeError = null
+                size = newSize
+                board = createBoard(newSize)
+                reset()
+            }
         }
     }
 
