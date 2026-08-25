@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewmodel: ChessboardViewmodel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -25,16 +26,9 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Dashboard(
                         modifier = Modifier.padding(innerPadding),
-                        chessboard = viewmodel.board,
+                        uiState = viewmodel.uiState,
                         markSquare = viewmodel::markSquare,
-                        startPosition = viewmodel.startPosition,
-                        endPosition = viewmodel.endPosition,
-                        paths = viewmodel.paths,
-                        isSearching = viewmodel.isSearching,
-                        sizeText = viewmodel.sizeText,
                         onSizeChange = viewmodel::onSizeChange,
-                        sizeError = viewmodel.sizeError,
-                        maxMove = viewmodel.maxMove,
                         onMaxMoveChange = viewmodel::onMaxMovesChange,
                         reset = viewmodel::reset,
                     )

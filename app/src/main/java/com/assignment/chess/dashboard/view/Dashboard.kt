@@ -19,27 +19,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.assignment.chess.dashboard.model.Chessboard
 import com.assignment.chess.dashboard.model.Position
 import com.assignment.chess.dashboard.model.toSquare
 
 @Composable
 fun Dashboard(
     modifier: Modifier = Modifier,
-    chessboard: Chessboard,
+    uiState: ChessUiState,
     markSquare: (Position?) -> Unit,
-    startPosition: Position?,
-    endPosition: Position?,
-    paths: List<List<Position>>,
-    isSearching: Boolean,
-    sizeText: String,
     onSizeChange: (String) -> Unit,
-    sizeError: String?,
-    maxMove: String,
     onMaxMoveChange: (String) -> Unit,
     reset: () -> Unit,
 ) {
-    val boardSize = chessboard.size
+    val boardSize = uiState.board.size
 
     LazyColumn(
         modifier = modifier
@@ -47,10 +39,10 @@ fun Dashboard(
             .imePadding()
     ) {
         item {
-            ButtonAndTitle("board size", sizeText, onSizeChange, sizeError)
+            ButtonAndTitle("board size", uiState.sizeText, onSizeChange, uiState.sizeError)
         }
         item {
-            ButtonAndTitle("max movements", maxMove, onMaxMoveChange)
+            ButtonAndTitle("max movements", uiState.maxMove, onMaxMoveChange)
         }
         item {
             Button(
@@ -65,13 +57,13 @@ fun Dashboard(
                 modifier = modifier.padding(top = 16.dp),
                 boardSize,
                 markSquare,
-                startPosition,
-                endPosition,
+                uiState.startPosition,
+                uiState.endPosition,
             )
         }
 
         when {
-            isSearching -> {
+            uiState.isSearching -> {
                 item {
                     Text(
                         text = "Searching",
@@ -80,7 +72,7 @@ fun Dashboard(
                 }
             }
 
-            startPosition == null -> {
+            uiState.startPosition == null -> {
                 item {
                     Text(
                         text = "tap start position",
@@ -89,7 +81,7 @@ fun Dashboard(
                 }
             }
 
-            endPosition == null -> {
+            uiState.endPosition == null -> {
                 item {
                     Text(
                         text = "tap end position",
@@ -98,7 +90,7 @@ fun Dashboard(
                 }
             }
 
-            paths.isEmpty() -> {
+            uiState.paths.isEmpty() -> {
                 item {
                     Text(
                         text = "no solution",
@@ -109,14 +101,15 @@ fun Dashboard(
             }
 
             else -> {
+                val start = uiState.startPosition ?: return@LazyColumn
                 items(
-                    items = paths,
+                    items = uiState.paths,
                     key = { path ->
                         path.joinToString("|") { "${it.row}:${it.col}" }
                     },
                 ) { path ->
                     Text(
-                        text = (listOf(startPosition) + path)
+                        text = (listOf(start) + path)
                             .joinToString(" → ") { it.toSquare(boardSize) },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     )

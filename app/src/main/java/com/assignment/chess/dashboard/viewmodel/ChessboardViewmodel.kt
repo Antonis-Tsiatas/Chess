@@ -1,6 +1,5 @@
 package com.assignment.chess.dashboard.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +12,7 @@ import com.assignment.chess.dashboard.domain.KnightMoves
 import com.assignment.chess.dashboard.model.Chessboard
 import com.assignment.chess.dashboard.model.Position
 import com.assignment.chess.dashboard.model.Square
+import com.assignment.chess.dashboard.view.ChessUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,48 +20,28 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class ChessboardViewmodel @Inject constructor(private val repository: Repository) : ViewModel() {
+class ChessboardViewmodel @Inject constructor(
+    private val repository: Repository,
+) : ViewModel() {
 
-    var startPosition by mutableStateOf<Position?>(null)
-        private set
-
-    var endPosition by mutableStateOf<Position?>(null)
-        private set
-
-    var paths by mutableStateOf<List<List<Position>>>(emptyList())
-        private set
-
-    var maxMove by mutableStateOf("3")
-        private set
-
-    var sizeText by mutableStateOf("6")
-        private set
-
-    var size by mutableStateOf(6)
-        private set
-
-    var board by mutableStateOf(createBoard(6))
-        private set
-
-    var isSearching by mutableStateOf(false)
-        private set
-
-    var sizeError by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(ChessUiState())
         private set
 
     init {
         viewModelScope.launch {
             repository.load()?.let { saved ->
-                size = saved.boardSize
-                sizeText = saved.boardSize.toString()
-                board = createBoard(saved.boardSize)
-                maxMove = saved.maxMove
-                startPosition = saved.start
-                endPosition = saved.end
-                paths = saved.paths
+                uiState = uiState.copy(
+                    board = createBoard(saved.boardSize),
+                    sizeText = saved.boardSize.toString(),
+                    maxMove = saved.maxMove,
+                    startPosition = saved.start,
+                    endPosition = saved.end,
+                    paths = saved.paths,
+                )
             }
         }
     }
+
     private fun createBoard(size: Int): Chessboard {
         val squares = List(size * size) { index ->
             val row = index / size
@@ -72,37 +52,37 @@ class ChessboardViewmodel @Inject constructor(private val repository: Repository
     }
 
     fun markSquare(position: Position?) {
-        when {
-            startPosition == null -> startPosition = position
-            endPosition == null -> endPosition = position
-            else -> {
-                startPosition = position
-                endPosition = null
-            }
+        val current = uiState
+        val updated = when {
+            current.startPosition == null -> current.copy(startPosition = position)
+            current.endPosition == null -> current.copy(endPosition = position)
+            else -> current.copy(startPosition = position, endPosition = null, paths = emptyList())
         }
-        Log.d("myPosition start", startPosition.toString())
-        Log.d("myPosition end", endPosition.toString())
-        val start = startPosition
-        val end = endPosition
-        if (start != null && end != null)
+        uiState = updated
+
+        val start = updated.startPosition
+        val end = updated.endPosition
+        if (start != null && end != null) {
             viewModelScope.launch {
-                isSearching = true
+                uiState = uiState.copy(isSearching = true)
                 val results = withContext(Dispatchers.Default) {
                     findPath(start, end)
                 }
-                Log.d("findPath", "done, count=${results.size}")
-                paths = results
-                isSearching = false
+                uiState = uiState.copy(
+                    paths = results,
+                    isSearching = false,
+                )
                 repository.save(
                     SavedSolution(
                         start = start,
                         end = end,
-                        boardSize = board.size,
-                        maxMove = maxMove,
+                        boardSize = uiState.board.size,
+                        maxMove = uiState.maxMove,
                         paths = results,
                     )
                 )
             }
+        }
     }
 
     fun findPath(start: Position, end: Position): List<List<Position>> {
@@ -110,16 +90,18 @@ class ChessboardViewmodel @Inject constructor(private val repository: Repository
         val currentPath = mutableListOf<Position>()
         val resultPaths = mutableListOf<List<Position>>()
         val visited = mutableSetOf(start)
-        val maxMoves = maxMove.toIntOrNull() ?: 3
-        dfs(moves, currentPath, resultPaths, visited, start, end, maxMoves, board.size)
+        val maxMoves = uiState.maxMove.toIntOrNull() ?: 3
+        dfs(moves, currentPath, resultPaths, visited, start, end, maxMoves, uiState.board.size)
         return resultPaths
     }
 
     fun reset() {
-        startPosition = null
-        endPosition = null
-        paths = emptyList()
-        isSearching = false
+        uiState = uiState.copy(
+            startPosition = null,
+            endPosition = null,
+            paths = emptyList(),
+            isSearching = false,
+        )
         viewModelScope.launch {
             repository.clear()
         }
@@ -128,26 +110,30 @@ class ChessboardViewmodel @Inject constructor(private val repository: Repository
     fun onSizeChange(value: String) {
         val digits = value.filter { it.isDigit() }
         if (digits.isEmpty()) {
-            sizeText = ""
-            sizeError = null
+            uiState = uiState.copy(sizeText = "", sizeError = null)
             return
         }
         val newSize = digits.toIntOrNull() ?: return
 
         when {
             newSize < 6 -> {
-                sizeText = digits
-                sizeError = "Minimum board size is 6"
+                uiState = uiState.copy(
+                    sizeText = digits,
+                    sizeError = "Minimum board size is 6",
+                )
             }
             newSize > 16 -> {
-                sizeText = digits
-                sizeError = "Maximum board size is 16"
+                uiState = uiState.copy(
+                    sizeText = digits,
+                    sizeError = "Maximum board size is 16",
+                )
             }
             else -> {
-                sizeText = digits
-                sizeError = null
-                size = newSize
-                board = createBoard(newSize)
+                uiState = uiState.copy(
+                    sizeText = digits,
+                    sizeError = null,
+                    board = createBoard(newSize),
+                )
                 reset()
             }
         }
@@ -156,12 +142,12 @@ class ChessboardViewmodel @Inject constructor(private val repository: Repository
     fun onMaxMovesChange(value: String) {
         val digits = value.filter { it.isDigit() }
         if (digits.isEmpty()) {
-            maxMove = ""
+            uiState = uiState.copy(maxMove = "")
             return
         }
         val number = digits.toIntOrNull() ?: return
         if (number in 1..10) {
-            maxMove = digits
+            uiState = uiState.copy(maxMove = digits)
         }
     }
 }
