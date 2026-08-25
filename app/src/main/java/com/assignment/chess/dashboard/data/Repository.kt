@@ -3,7 +3,10 @@ package com.assignment.chess.dashboard.data
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import com.assignment.chess.dashboard.model.Position
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import javax.inject.Inject
+import javax.inject.Singleton
 
 
 data class SavedSolution(
@@ -13,8 +16,8 @@ data class SavedSolution(
     val maxMove: String,
     val paths: List<List<Position>>,
 )
-
-class Repository(private val context: Context) {
+@Singleton
+class Repository @Inject constructor(@ApplicationContext private val context: Context) {
     suspend fun save(solution: SavedSolution) {
         context.dataStore.edit { prefs ->
             prefs[ChessPrefsKeys.START_ROW] = solution.start.row

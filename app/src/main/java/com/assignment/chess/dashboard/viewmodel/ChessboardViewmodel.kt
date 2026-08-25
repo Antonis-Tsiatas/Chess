@@ -13,11 +13,14 @@ import com.assignment.chess.dashboard.domain.KnightMoves
 import com.assignment.chess.dashboard.model.Chessboard
 import com.assignment.chess.dashboard.model.Position
 import com.assignment.chess.dashboard.model.Square
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class ChessboardViewmodel(private val repository: Repository) : ViewModel() {
+@HiltViewModel
+class ChessboardViewmodel @Inject constructor(private val repository: Repository) : ViewModel() {
 
     var startPosition by mutableStateOf<Position?>(null)
         private set

@@ -9,16 +9,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.assignment.chess.dashboard.data.Repository
 import com.assignment.chess.dashboard.view.Dashboard
-import com.assignment.chess.dashboard.viewmodel.ChessViewModelFactory
 import com.assignment.chess.dashboard.viewmodel.ChessboardViewmodel
 import com.assignment.chess.ui.theme.ChessTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val viewmodel: ChessboardViewmodel by viewModels {
-        ChessViewModelFactory(Repository(applicationContext))
-    }
+    private val viewmodel: ChessboardViewmodel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
